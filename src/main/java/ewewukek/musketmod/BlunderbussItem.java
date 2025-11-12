@@ -1,23 +1,26 @@
 package ewewukek.musketmod;
 
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.item.Item;
 
 import static ewewukek.musketmod.MusketItem.damageMultiplierMax;
 import static ewewukek.musketmod.MusketItem.damageMultiplierMin;
+import static ewewukek.musketmod.MusketItem.bulletStdDev;
+import static ewewukek.musketmod.MusketItem.bulletSpeed;
 
 public class BlunderbussItem extends GunItem {
-    public BlunderbussItem(Properties properties) {
+    public BlunderbussItem(Item.Properties properties) {
         super(properties);
     }
 
     @Override
     public float bulletStdDev() {
-        return Config.blunderbussBulletStdDev;
+        return MusketItem.bulletStdDev;
     }
 
     @Override
     public float bulletSpeed() {
-        return Config.blunderbussBulletSpeed;
+        return MusketItem.bulletSpeed;
     }
 
     @Override

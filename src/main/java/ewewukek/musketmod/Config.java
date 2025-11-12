@@ -34,8 +34,6 @@ public class Config {
     public static final float BLUNDERBUSS_BULLET_SPEED = 160.0f;
     public static float blunderbussDamage;
     public static final float BLUNDERBUSS_DAMAGE = 25.0f;
-    public static int blunderbussPelletCount;
-    public static final int BLUNDERBUSS_PELLET_COUNT = 9;
     public static int blunderbussDurability;
     public static final int BLUNDERBUSS_DURABILITY = 200;
 
@@ -46,7 +44,6 @@ public class Config {
         blunderbussBulletStdDev = BLUNDERBUSS_BULLET_STD_DEV;
         blunderbussBulletSpeed = BLUNDERBUSS_BULLET_SPEED;
         blunderbussDamage = BLUNDERBUSS_DAMAGE;
-        blunderbussPelletCount = BLUNDERBUSS_PELLET_COUNT;
         blunderbussDurability = BLUNDERBUSS_DURABILITY;
 
 
