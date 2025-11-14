@@ -240,9 +240,9 @@ public abstract class GunItem extends Item {
             level.addFreshEntity(bullet);
             level.addFreshEntity(bullet);
             // 示例：发射额外弹丸
-            for (int i = 0; i < 5; i++) { // 发射5个额外弹丸
+            for (int i = 0; i < 9; i++) { // 发射5个额外弹丸
                 float pelletAngle = (float) Math.PI * 2 * random.nextFloat();
-                float pelletSpread = spread * 1.5f; // 更大的散布
+                float pelletSpread = spread * 8f; // 更大的散布
 
                 Vec3 pelletMotion = direction.scale(Mth.cos(pelletSpread))
                         .add(n1.scale(Mth.sin(pelletSpread) * Mth.sin(pelletAngle)))
@@ -254,7 +254,7 @@ public abstract class GunItem extends Item {
                 pellet.setPos(origin);
                 pellet.setInitialSpeed(bulletSpeed() * 0.8f);
                 pellet.setDeltaMovement(pelletMotion);
-                pellet.damageMultiplier = bullet.damageMultiplier * 0.5f; // 减半伤害
+                pellet.damageMultiplier = bullet.damageMultiplier * 0.75f; // 减半伤害
                 pellet.ignoreInvulnerableTime = ignoreInvulnerableTime();
 
                 level.addFreshEntity(pellet);
