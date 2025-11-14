@@ -1,0 +1,8 @@
+{
+	"format_version": "1.21.6",
+	"credit": "Made with Blockbench",
+	"parent": "musketmod:item/rifle",
+	"textures": {
+		"layer0": "musketmod:item/rifle_loaded"
+	}
+}

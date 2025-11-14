@@ -9,5 +9,5 @@ public class Items {
 	public static final Item BLUNDERBUSS = new BlunderbussItem(new Item.Properties());
 	public static final Item MUSKET_WITH_BAYONET = new MusketItem(new Item.Properties(), true);
 	public static final Item PISTOL = new PistolItem(new Item.Properties());
-	public static final Item CARBINE = new BlunderbussItem(new Item.Properties());
+	public static final Item RIFLE = new RifleItem(new Item.Properties());
 }

@@ -20,7 +20,7 @@ public class ClientSetup implements ClientModInitializer {
         };
         ItemProperties.register(Items.MUSKET, new ResourceLocation("loaded"), loaded);
         ItemProperties.register(Items.BLUNDERBUSS, new ResourceLocation("loaded"), loaded);
-        ItemProperties.register(Items.CARBINE, new ResourceLocation("loaded"), loaded);
+        ItemProperties.register(Items.RIFLE, new ResourceLocation("loaded"), loaded);
         ItemProperties.register(Items.MUSKET_WITH_BAYONET, new ResourceLocation("loaded"), loaded);
         ItemProperties.register(Items.PISTOL, new ResourceLocation("loaded"), loaded);
 

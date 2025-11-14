@@ -47,7 +47,7 @@ public class MusketMod implements ModInitializer {
 
         Registry.register(BuiltInRegistries.ITEM, new ResourceLocation(MODID, "musket"), Items.MUSKET);
         Registry.register(BuiltInRegistries.ITEM, new ResourceLocation(MODID, "blunderbuss"), Items.BLUNDERBUSS);
-        Registry.register(BuiltInRegistries.ITEM, new ResourceLocation(MODID, "carbine"), Items.CARBINE);
+        Registry.register(BuiltInRegistries.ITEM, new ResourceLocation(MODID, "rifle"), Items.RIFLE);
         Registry.register(BuiltInRegistries.ITEM, new ResourceLocation(MODID, "musket_with_bayonet"), Items.MUSKET_WITH_BAYONET);
         Registry.register(BuiltInRegistries.ITEM, new ResourceLocation(MODID, "pistol"), Items.PISTOL);
         Registry.register(BuiltInRegistries.ITEM, new ResourceLocation(MODID, "cartridge"), Items.CARTRIDGE);
@@ -63,6 +63,7 @@ public class MusketMod implements ModInitializer {
 
         ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.COMBAT).register(content -> {
             content.accept(Items.MUSKET);
+            content.accept(Items.RIFLE);
             content.accept(Items.BLUNDERBUSS);
             content.accept(Items.MUSKET_WITH_BAYONET);
             content.accept(Items.PISTOL);

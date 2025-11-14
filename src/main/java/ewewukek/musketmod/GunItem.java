@@ -233,6 +233,34 @@ public abstract class GunItem extends Item {
         level.addFreshEntity(bullet);
         MusketMod.sendSmokeEffect(shooter, origin.add(smokeOriginOffset), direction);
         ItemStack heldItem = shooter.getMainHandItem();
+        if (heldItem.getItem() == Items.RIFLE) {
+            // 为霰弹枪添加特殊效果
+            // 例如：发射多个弹丸、更大的烟雾效果等
+            level.addFreshEntity(bullet);
+            // 示例：发射额外弹丸
+            for (int i = 0; i < 2; i++) { // 发射5个额外弹丸
+                float pelletAngle = (float) Math.PI * 2 * random.nextFloat();
+                float pelletSpread = spread * 0.5f; // 更大的散布
+
+                Vec3 pelletMotion = direction.scale(Mth.cos(pelletSpread))
+                        .add(n1.scale(Mth.sin(pelletSpread) * Mth.sin(pelletAngle)))
+                        .add(n2.scale(Mth.sin(pelletSpread) * Mth.cos(pelletAngle)))
+                        .scale(bulletSpeed() * 0.9f); // 稍慢的速度
+
+                BulletEntity pellet = new BulletEntity(level);
+                pellet.setOwner(shooter);
+                pellet.setPos(origin);
+                pellet.setInitialSpeed(bulletSpeed() * 0.9f);
+                pellet.setDeltaMovement(pelletMotion);
+                pellet.damageMultiplier = bullet.damageMultiplier * 1.75f; // 减半伤害
+                pellet.ignoreInvulnerableTime = ignoreInvulnerableTime();
+
+                level.addFreshEntity(pellet);
+            }
+
+            // 更大的烟雾效果
+            MusketMod.sendSmokeEffect(shooter, origin.add(smokeOriginOffset), direction.scale(2));
+        }
         if (heldItem.getItem() == Items.BLUNDERBUSS) {
             // 为霰弹枪添加特殊效果
             // 例如：发射多个弹丸、更大的烟雾效果等
