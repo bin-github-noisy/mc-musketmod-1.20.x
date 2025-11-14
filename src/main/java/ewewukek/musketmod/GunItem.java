@@ -237,12 +237,10 @@ public abstract class GunItem extends Item {
             // 为霰弹枪添加特殊效果
             // 例如：发射多个弹丸、更大的烟雾效果等
             level.addFreshEntity(bullet);
-            level.addFreshEntity(bullet);
-            level.addFreshEntity(bullet);
             // 示例：发射额外弹丸
             for (int i = 0; i < 9; i++) { // 发射5个额外弹丸
                 float pelletAngle = (float) Math.PI * 2 * random.nextFloat();
-                float pelletSpread = spread * 8f; // 更大的散布
+                float pelletSpread = spread * 14f; // 更大的散布
 
                 Vec3 pelletMotion = direction.scale(Mth.cos(pelletSpread))
                         .add(n1.scale(Mth.sin(pelletSpread) * Mth.sin(pelletAngle)))
