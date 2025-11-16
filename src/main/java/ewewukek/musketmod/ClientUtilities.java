@@ -87,8 +87,8 @@ public class ClientUtilities {
 
 				// 基于总装填时间的比例计算装填阶段时间
 				int loadingStage1 = reloadDuration / 6;      // 总装填时间的1/6
-				int loadingStage2 = reloadDuration / 2;     // 总装填时间的1/2
-				int loadingStage3 = reloadDuration * 5 / 6;  // 总装填时间的5/6
+				int loadingStage2 = reloadDuration / 3;     // 总装填时间的1/3
+				int loadingStage3 = reloadDuration * 2 / 3;  // 总装填时间的2/3
 				
 				// 减缓装填动画速度：延长动画持续时间，减小移动幅度
 				if ((usingDuration >= loadingStage1 && usingDuration <= loadingStage1 + 10) || 
