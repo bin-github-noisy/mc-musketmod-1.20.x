@@ -24,15 +24,10 @@ import net.minecraft.world.scores.Objective;
 import net.minecraft.world.scores.Score;
 import net.minecraft.world.scores.Scoreboard;
 import net.minecraft.world.scores.criteria.ObjectiveCriteria;
+import org.jetbrains.annotations.NotNull;
 
 public abstract class GunItem extends Item {
-    public static final int LOADING_STAGE_1 = 5;
-    public static final int LOADING_STAGE_2 = 10;
-    public static final int LOADING_STAGE_3 = 20;
-    public static final int RELOAD_DURATION = 30;
 
-
-    // for RenderHelper
     public static ItemStack activeMainHandStack;
     public static ItemStack activeOffhandStack;
 
@@ -47,6 +42,7 @@ public abstract class GunItem extends Item {
     public abstract SoundEvent fireSound();
     public abstract boolean twoHanded();
     public abstract boolean ignoreInvulnerableTime();
+    public abstract int getReloadDuration();
 
     public boolean canUseFrom(Player player, InteractionHand hand) {
         if (hand == InteractionHand.MAIN_HAND) {
@@ -63,7 +59,7 @@ public abstract class GunItem extends Item {
     }
 
     @Override
-    public InteractionResultHolder<ItemStack> use(Level worldIn, Player player, InteractionHand hand) {
+    public @NotNull InteractionResultHolder<ItemStack> use(Level worldIn, Player player, InteractionHand hand) {
         if (!canUseFrom(player, hand)) return super.use(worldIn, player, hand);
 
         ItemStack stack = player.getItemInHand(hand);
@@ -76,8 +72,7 @@ public abstract class GunItem extends Item {
         // shoot from left hand if both are loaded
         if (hand == InteractionHand.MAIN_HAND && !twoHanded() && isLoaded(stack)) {
             ItemStack offhandStack = player.getItemInHand(InteractionHand.OFF_HAND);
-            if (!offhandStack.isEmpty() && offhandStack.getItem() instanceof GunItem) {
-                GunItem offhandGun = (GunItem)offhandStack.getItem();
+            if (!offhandStack.isEmpty() && offhandStack.getItem() instanceof GunItem offhandGun) {
                 if (!offhandGun.twoHanded() && isLoaded(offhandStack)) {
                     return InteractionResultHolder.pass(stack);
                 }
@@ -99,9 +94,7 @@ public abstract class GunItem extends Item {
             player.playSound(fireSound(), 3.5f, 1);
 
             setLoaded(stack, false);
-            stack.hurtAndBreak(1, player, (entity) -> {
-                entity.broadcastBreakEvent(hand);
-            });
+            stack.hurtAndBreak(1, player, (entity) -> entity.broadcastBreakEvent(hand));
 
             if (worldIn.isClientSide) setActiveStack(hand, stack);
 
@@ -129,16 +122,22 @@ public abstract class GunItem extends Item {
     public void onUseTick(Level world, LivingEntity entity, ItemStack stack, int timeLeft) {
         int usingDuration = getUseDuration(stack) - timeLeft;
         int loadingStage = getLoadingStage(stack);
+        int reloadDuration = getReloadDuration();
 
-        if (loadingStage == 1 && usingDuration >= LOADING_STAGE_1) {
+        // 基于总装填时间的比例计算装填阶段时间
+        int loadingStage1 = reloadDuration / 6;      // 总装填时间的1/6
+        int loadingStage2 = reloadDuration / 3;     // 总装填时间的1/3  
+        int loadingStage3 = reloadDuration * 2 / 3;  // 总装填时间的2/3
+
+        if (loadingStage == 1 && usingDuration >= loadingStage1) {
             entity.playSound(Sounds.MUSKET_LOAD_0, 0.8f, 1);
             setLoadingStage(stack, 2);
 
-        } else if (loadingStage == 2 && usingDuration >= LOADING_STAGE_2) {
+        } else if (loadingStage == 2 && usingDuration >= loadingStage2) {
             entity.playSound(Sounds.MUSKET_LOAD_1, 0.8f, 1);
             setLoadingStage(stack, 3);
 
-        } else if (loadingStage == 3 && usingDuration >= LOADING_STAGE_3) {
+        } else if (loadingStage == 3 && usingDuration >= loadingStage3) {
             entity.playSound(Sounds.MUSKET_LOAD_2, 0.8f, 1);
             setLoadingStage(stack, 4);
         }
@@ -148,9 +147,8 @@ public abstract class GunItem extends Item {
             return;
         }
 
-        if (usingDuration >= RELOAD_DURATION && !isLoaded(stack)) {
-            if (entity instanceof Player) {
-                Player player = (Player)entity;
+        if (usingDuration >= reloadDuration && !isLoaded(stack)) {
+            if (entity instanceof Player player) {
                 if (!player.getAbilities().instabuild) {
                     ItemStack ammoStack = findAmmo(player);
                     if (ammoStack.isEmpty()) return;
@@ -168,18 +166,14 @@ public abstract class GunItem extends Item {
 
     @Override
     public boolean hurtEnemy(ItemStack stack, LivingEntity enemy, LivingEntity entityIn) {
-        stack.hurtAndBreak(1, entityIn, (entity) -> {
-            entity.broadcastBreakEvent(EquipmentSlot.MAINHAND);
-        });
+        stack.hurtAndBreak(1, entityIn, (entity) -> entity.broadcastBreakEvent(EquipmentSlot.MAINHAND));
         return false;
     }
 
     @Override
     public boolean mineBlock(ItemStack stack, Level worldIn, BlockState state, BlockPos pos, LivingEntity entityIn) {
         if (state.getDestroySpeed(worldIn, pos) != 0) {
-            stack.hurtAndBreak(1, entityIn, (entity) -> {
-                entity.broadcastBreakEvent(EquipmentSlot.MAINHAND);
-            });
+            stack.hurtAndBreak(1, entityIn, (entity) -> entity.broadcastBreakEvent(EquipmentSlot.MAINHAND));
         }
         return false;
     }
@@ -189,13 +183,39 @@ public abstract class GunItem extends Item {
         return 72000;
     }
 
-    public void fire(LivingEntity shooter, Vec3 direction) {
-        fire(shooter, direction, Vec3.ZERO);
-    }
-
     public void fire(LivingEntity shooter, Vec3 direction, Vec3 smokeOriginOffset) {
         RandomSource random = shooter.getRandom();
         Level level = shooter.level();
+
+        // 计算后坐力强度
+        double recoilStrength = getRecoilStrength(shooter.getMainHandItem());
+        
+        // 应用后坐力效果（仅对玩家生效）
+        if (shooter instanceof Player) {
+            Player player = (Player)shooter;
+            
+            // 水平后坐力（左右摇晃）- 增强效果
+            float horizontalRecoil = (float)((random.nextFloat() - 0.5) * recoilStrength * 3);
+            // 垂直后坐力（向上抬枪）- 增强效果
+            float verticalRecoil = (float)(recoilStrength * (1.0 + random.nextFloat() * 0.6));
+            
+            // 设置玩家的视角旋转
+            player.setYRot(player.getYRot() + horizontalRecoil);
+            player.setXRot(player.getXRot() - verticalRecoil);
+            
+            // 限制垂直角度在合理范围内
+            if (player.getXRot() < -90) player.setXRot(-90);
+            if (player.getXRot() > 90) player.setXRot(90);
+            
+            // 添加击退效果（仅对非创造模式玩家）- 增强效果
+            if (!player.getAbilities().instabuild) {
+                // 根据后坐力强度计算击退距离
+                float knockback = (float)(recoilStrength * 0.5); // 大幅增加击退强度
+                // 正确的击退方向：与射击方向相反
+                Vec3 knockbackDirection = direction.scale(-1).normalize();
+                player.setDeltaMovement(player.getDeltaMovement().add(knockbackDirection.scale(knockback)));
+            }
+        }
 
         float angle = (float) Math.PI * 2 * random.nextFloat();
         float gaussian = Math.abs((float) random.nextGaussian());
@@ -238,9 +258,9 @@ public abstract class GunItem extends Item {
             // 例如：发射多个弹丸、更大的烟雾效果等
             level.addFreshEntity(bullet);
             // 示例：发射额外弹丸
-            for (int i = 0; i < 2; i++) { // 发射5个额外弹丸
+            for (int i = 0; i < 1; i++) { // 发射5个额外弹丸
                 float pelletAngle = (float) Math.PI * 2 * random.nextFloat();
-                float pelletSpread = spread * 0.5f; // 更大的散布
+                float pelletSpread = spread * 1f; // 更大的散布
 
                 Vec3 pelletMotion = direction.scale(Mth.cos(pelletSpread))
                         .add(n1.scale(Mth.sin(pelletSpread) * Mth.sin(pelletAngle)))
@@ -252,7 +272,7 @@ public abstract class GunItem extends Item {
                 pellet.setPos(origin);
                 pellet.setInitialSpeed(bulletSpeed() * 0.9f);
                 pellet.setDeltaMovement(pelletMotion);
-                pellet.damageMultiplier = bullet.damageMultiplier * 1.75f; // 减半伤害
+                pellet.damageMultiplier = bullet.damageMultiplier * 3f; // 减半伤害
                 pellet.ignoreInvulnerableTime = ignoreInvulnerableTime();
 
                 level.addFreshEntity(pellet);
@@ -380,4 +400,19 @@ public abstract class GunItem extends Item {
         }
     }
 
+    // 获取当前枪支的后坐力强度
+    protected double getRecoilStrength(ItemStack stack) {
+        if (stack.getItem() == Items.MUSKET) {
+            return Config.INSTANCE.musketRecoilStrength;
+        } else if (stack.getItem() == Items.PISTOL) {
+            return Config.INSTANCE.pistolRecoilStrength;
+        } else if (stack.getItem() == Items.BLUNDERBUSS) {
+            return Config.INSTANCE.blunderbussRecoilStrength;
+        } else if (stack.getItem() == Items.RIFLE) {
+            return Config.INSTANCE.rifleRecoilStrength;
+        } else if (stack.getItem() == Items.MUSKET_WITH_BAYONET) {
+            return Config.INSTANCE.musketWithBayonetRecoilStrength;
+        }
+        return 1.0; // 默认值
+    }
 }

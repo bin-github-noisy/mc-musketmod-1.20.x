@@ -49,4 +49,8 @@ public class BlunderbussItem extends GunItem {
         return Sounds.MUSKET_FIRE;
     }
 
+    @Override
+    public int getReloadDuration() {
+        return Config.INSTANCE.blunderbussReloadDuration;
+    }
 }

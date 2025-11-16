@@ -5,6 +5,8 @@ import net.minecraft.world.item.Item;
 
 import static ewewukek.musketmod.MusketItem.damageMultiplierMax;
 import static ewewukek.musketmod.MusketItem.damageMultiplierMin;
+import static ewewukek.musketmod.MusketItem.bulletStdDev;
+import static ewewukek.musketmod.MusketItem.bulletSpeed;
 
 public class RifleItem extends GunItem {
     public RifleItem(Item.Properties properties) {
@@ -41,11 +43,14 @@ public class RifleItem extends GunItem {
         return false;
     }
 
-
+    @Override
+    public int getReloadDuration() {
+        return Config.INSTANCE.rifleReloadDuration;
+    }
+    
     @Override
     public SoundEvent fireSound() {
         return Sounds.MUSKET_FIRE;
     }
 
 }
-

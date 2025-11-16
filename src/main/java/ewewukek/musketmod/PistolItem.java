@@ -9,6 +9,7 @@ public class PistolItem extends GunItem {
     public static float bulletSpeed;
     public static float damageMultiplierMin;
     public static float damageMultiplierMax;
+    public static int reloadDuration;
 
     public PistolItem(Properties properties) {
         super(properties.defaultDurability(DURABILITY));
@@ -47,5 +48,10 @@ public class PistolItem extends GunItem {
     @Override
     public boolean ignoreInvulnerableTime() {
         return true;
+    }
+
+    @Override
+    public int getReloadDuration() {
+        return reloadDuration;
     }
 }

@@ -24,7 +24,7 @@ public class MixinHeldItemRenderer {
     )
     private void renderArmWithItem(AbstractClientPlayer player, float tickDelta, float pitch, InteractionHand hand, float swingProgress, ItemStack stack, float equipProgress, PoseStack matrices, MultiBufferSource vertexConsumers, int light, CallbackInfo ci) {
         if (stack.getItem() instanceof GunItem) {
-            ClientUtilities.renderGunInHand((ItemInHandRenderer)(Object)this, player, hand, tickDelta, pitch, swingProgress, equipProgress, stack, matrices,vertexConsumers, light);
+            ClientUtilities.renderGunInHand((ItemInHandRenderer)(Object)this, player, hand, tickDelta, pitch, swingProgress, equipProgress, stack, matrices, vertexConsumers, light);
             ci.cancel();
         }
     }

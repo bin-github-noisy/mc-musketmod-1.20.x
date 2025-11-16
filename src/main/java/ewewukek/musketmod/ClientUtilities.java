@@ -45,8 +45,19 @@ public class ClientUtilities {
 			return;
 		}
 
+		// 添加射击后坐力效果
 		if (stack == GunItem.getActiveStack(hand)) {
 			setEquipAnimationDisabled(hand, true);
+			
+			// 计算后坐力强度
+			double recoilStrength = getRecoilStrength(stack);
+			
+			// 应用视觉后坐力（快速向上移动然后缓慢恢复）
+			float recoilProgress = Math.min(1.0f, (player.getUseItemRemainingTicks() - partialTicks) / 10.0f);
+			if (recoilProgress > 0) {
+				float recoilOffset = (float)(recoilStrength * 0.02 * (1 - recoilProgress));
+				matrixStack.translate(0, -recoilOffset, 0);
+			}
 		}
 
 		matrixStack.pushPose();
@@ -66,36 +77,49 @@ public class ClientUtilities {
 
 		} else if (player.isUsingItem() && player.getUsedItemHand() == hand) {
 			float usingDuration = stack.getUseDuration() - (player.getUseItemRemainingTicks() - partialTicks + 1);
-			if (usingDuration > 0 && usingDuration < GunItem.RELOAD_DURATION) {
+            gunItem = (GunItem) stack.getItem();
+			int reloadDuration = gunItem.getReloadDuration();
+			
+			if (usingDuration > 0 && usingDuration < reloadDuration) {
 				matrixStack.translate(0, -0.3, 0.05);
 				matrixStack.mulPose(Axis.XP.rotationDegrees(60));
 				matrixStack.mulPose(Axis.ZP.rotationDegrees(10));
 
-				if (usingDuration >= 8 && usingDuration <= 14 || usingDuration >= 18 && usingDuration <= 24) {
-					if (usingDuration >= 18) usingDuration -= 10;
-					float t;
-					if (usingDuration < 10) {
-						t = (usingDuration - 8) / 2;
-						t = Mth.sin((float) Math.PI / 2 * Mth.sqrt(t));
-					} else {
-						t = (14 - usingDuration) / 4;
-					}
-					matrixStack.translate(0, 0, 0.025 * t);
+				// 基于总装填时间的比例计算装填阶段时间
+				int loadingStage1 = reloadDuration / 6;      // 总装填时间的1/6
+				int loadingStage2 = reloadDuration / 2;     // 总装填时间的1/2
+				int loadingStage3 = reloadDuration * 5 / 6;  // 总装填时间的5/6
+				
+				// 减缓装填动画速度：延长动画持续时间，减小移动幅度
+				if ((usingDuration >= loadingStage1 && usingDuration <= loadingStage1 + 10) || 
+				    (usingDuration >= loadingStage2 && usingDuration <= loadingStage2 + 10) || 
+				    (usingDuration >= loadingStage3 && usingDuration <= loadingStage3 + 10)) {
+				    float t;
+				    if (usingDuration < loadingStage1 + 4) {
+				        t = (usingDuration - loadingStage1) / 4;  // 延长动画持续时间
+				        t = Mth.sin((float) Math.PI / 2 * Mth.sqrt(t));
+				    } else if (usingDuration < loadingStage2 + 4) {
+				        t = (usingDuration - loadingStage2) / 4;  // 延长动画持续时间
+				        t = Mth.sin((float) Math.PI / 2 * Mth.sqrt(t));
+				    } else {
+				        t = (usingDuration - loadingStage3) / 4;  // 延长动画持续时间
+				        t = Mth.sin((float) Math.PI / 2 * Mth.sqrt(t));
+				    }
+				    matrixStack.translate(0, 0, 0.015 * t);  // 减小移动幅度
 				}
 				if (gunItem == Items.PISTOL) {
-					matrixStack.translate(0, 0, -0.12);
+				    matrixStack.translate(0, 0, -0.12);
 				}
-			}
-		} else {
-			if (isEquipAnimationDisabled(hand)) {
-				if (equipProgress == 0) {
-					setEquipAnimationDisabled(hand, false);
-				}
-			} else {
-				matrixStack.translate(0, -0.6 * equipProgress, 0);
 			}
 		}
 
+		if (isEquipAnimationDisabled(hand)) {
+			if (equipProgress == 0) {
+				setEquipAnimationDisabled(hand, false);
+			}
+		} else {
+			matrixStack.translate(0, -0.6 * equipProgress, 0);
+		}
 		renderer.renderItem(player, stack, isRightHand ? ItemDisplayContext.FIRST_PERSON_RIGHT_HAND : ItemDisplayContext.FIRST_PERSON_LEFT_HAND, !isRightHand, matrixStack, render, packedLight);
 		matrixStack.popPose();
 	}
@@ -115,4 +139,21 @@ public class ClientUtilities {
 			disableOffhandEquipAnimation = disabled;
 		}
 	}
+
+	// 获取当前枪支的后坐力强度（客户端版本）
+	private static double getRecoilStrength(ItemStack stack) {
+		if (stack.getItem() == Items.MUSKET) {
+			return Config.INSTANCE.musketRecoilStrength;
+		} else if (stack.getItem() == Items.PISTOL) {
+			return Config.INSTANCE.pistolRecoilStrength;
+		} else if (stack.getItem() == Items.BLUNDERBUSS) {
+			return Config.INSTANCE.blunderbussRecoilStrength;
+		} else if (stack.getItem() == Items.RIFLE) {
+			return Config.INSTANCE.rifleRecoilStrength;
+		} else if (stack.getItem() == Items.MUSKET_WITH_BAYONET) {
+			return Config.INSTANCE.musketWithBayonetRecoilStrength;
+		}
+		return 1.0; // 默认值
+	}
+
 }
